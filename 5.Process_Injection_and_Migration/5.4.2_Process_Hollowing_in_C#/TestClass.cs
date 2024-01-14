@@ -1,4 +1,4 @@
-// Compile Command : DotNetToJScript.exe ExampleAssembly.dll --lang=Jscript --ver=v4 -o runner.js
+// Compile Command : DotNetToJScript.exe ExampleAssembly.dll --lang=Jscript/VBScript --ver=v4 -o runner.js/vbs
 using System;
 using System.Diagnostics;
 using System.Net;
